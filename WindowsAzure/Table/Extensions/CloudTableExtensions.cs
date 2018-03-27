@@ -421,7 +421,7 @@ namespace WindowsAzure.Table.Extensions
         /// </returns>
         public static TableResult Execute(this CloudTable table, TableOperation operation)
         {
-            return table.ExecuteAsync(operation).ExecuteSynchronously();
+            return table.ExecuteAsync(operation).GetAwaiter().GetResult();
         }
 
         /// <summary>
@@ -439,7 +439,7 @@ namespace WindowsAzure.Table.Extensions
         /// </returns>
         public static IList<TableResult> ExecuteBatch(this CloudTable table, TableBatchOperation batch)
         {
-            return table.ExecuteBatchAsync(batch).ExecuteSynchronously();
+            return table.ExecuteBatchAsync(batch).GetAwaiter().GetResult();
         }
 
         /// <summary>
@@ -454,7 +454,7 @@ namespace WindowsAzure.Table.Extensions
         /// </returns>
         public static IEnumerable<DynamicTableEntity> ExecuteQuery(this CloudTable table, TableQuery tableQuery)
         {
-            return table.ExecuteQueryAsync(tableQuery).ExecuteSynchronously();
+            return table.ExecuteQueryAsync(tableQuery).GetAwaiter().GetResult();
         }
 
         /// <summary>
@@ -477,11 +477,12 @@ namespace WindowsAzure.Table.Extensions
             do
             {
                 var result = await cloudTable.ExecuteQuerySegmentedAsync(tableQuery, token, null, null, cancellationToken);
+                tableEntities.AddRange(result.Results);
 
                 // Checks whether TakeCount entities has been received
                 if (tableQuery.TakeCount.HasValue && tableEntities.Count >= tableQuery.TakeCount.Value)
                 {
-                    return tableEntities.Take(tableQuery.TakeCount.Value).ToList();
+                    return tableEntities.Take(tableQuery.TakeCount.Value);
                 }
 
                 token = result.ContinuationToken;
